@@ -10,7 +10,7 @@ import ru.clevertec.deserializer.Deserializer;
 public class DeserializerImpl implements Deserializer {
     @Override
     public <T> T deserialize(String content, Class<T> clazz) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        Object target = clazz.getConstructor().newInstance();
+        T target = clazz.getConstructor().newInstance();
         Field[] declaredFields = clazz.getDeclaredFields();
         for (Field field : declaredFields) {
             field.setAccessible(true);
@@ -41,6 +41,8 @@ public class DeserializerImpl implements Deserializer {
                     field.set(target, value);
                     content = content.replace(coincidence, "");
                 }
+            } else if (fieldType.getSimpleName().equals("Long")) {
+                content = setLong(content, field, target);
             } else if (fieldType.isEnum()) {
                 String stringPattern = "\"" + fieldName + "\":" + "\".*?\"";
                 Pattern pattern = Pattern.compile(stringPattern);
@@ -82,6 +84,20 @@ public class DeserializerImpl implements Deserializer {
 
             }
         }
-        return (T) target;
+        return target;
+    }
+
+    private String setLong(String content, Field field, Object target) throws IllegalAccessException {
+        String fieldName = field.getName();
+        String patternLong = "\"" + fieldName + "\":" + "(\\d+)";
+        Pattern pattern = Pattern.compile(patternLong);
+        Matcher matcher = pattern.matcher(content);
+        if (matcher.find()) {
+            String coincidence = matcher.group();
+            String value = coincidence.split(":")[1];
+            field.set(target, Long.parseLong(value));
+            content = content.replace(coincidence, "");
+        }
+        return content;
     }
 }

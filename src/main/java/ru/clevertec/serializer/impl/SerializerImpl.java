@@ -24,6 +24,8 @@ public class SerializerImpl implements Serializer {
                     case "long", "int" -> appendPrimitive(builder, field, obj);
                     case "string" -> appendStringEnum(builder, field, obj);
                 }
+            } else if (simpleName.equals("Long")) {
+                appendLong(builder, field, obj);
             } else if (fieldType.isEnum()) {
                 appendStringEnum(builder, field, obj);
             } else if (fieldType.isArray()) {
@@ -44,6 +46,15 @@ public class SerializerImpl implements Serializer {
         }
         builder.append("}");
         return builder;
+    }
+
+    private void appendLong(StringBuilder builder, Field field, Object obj) throws IllegalAccessException {
+        builder.append("\"")
+                .append(field.getName())
+                .append("\"")
+                .append(":")
+                .append(field.get(obj))
+                .append("");
     }
 
     private void appendLocalDate(StringBuilder builder, Field field, Object obj) throws IllegalAccessException {
