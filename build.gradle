@@ -1,6 +1,7 @@
 plugins {
-    id 'java'
     id "io.freefair.lombok" version "6.5.1"
+    id 'java-library'
+    id 'maven-publish'
 }
 
 group = 'ru.clevertec'
@@ -8,10 +9,31 @@ version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 java {
     sourceCompatibility = JavaLanguageVersion.of(17)
     targetCompatibility = JavaLanguageVersion.of(17)
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes(
+                'Implementation-Title': rootProject.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = group
+            artifactId = 'my-parser'
+            version = version
+            from components.java
+        }
+    }
 }
 
 ext {
