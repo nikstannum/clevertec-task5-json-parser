@@ -2,12 +2,25 @@ package ru.clevertec.serializer.impl;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.List;
 import ru.clevertec.serializer.Serializer;
 
 public class SerializerImpl implements Serializer {
     @Override
     public String serialize(Object obj) throws IllegalAccessException {
-        return serialize(new StringBuilder(), obj).toString();
+        StringBuilder builder = new StringBuilder();
+        if (obj instanceof List<?> list) {
+            builder.append("[");
+            for (int i = 0; i < list.size(); i++) {
+                Object item = list.get(i);
+                serialize(builder, item);
+                if (i != list.size() -1) {
+                    builder.append(",");
+                }
+            }
+            return builder.append("]").toString();
+        }
+        return serialize(builder, obj).toString();
     }
 
     private StringBuilder serialize(StringBuilder builder, Object obj) throws IllegalAccessException {
@@ -21,7 +34,7 @@ public class SerializerImpl implements Serializer {
             if (simpleName.equals("String") || fieldType.isPrimitive()) {
                 String simpleNameLowerCase = simpleName.toLowerCase();
                 switch (simpleNameLowerCase) {
-                    case "long", "int" -> appendPrimitive(builder, field, obj);
+                    case "long", "int", "boolean" -> appendPrimitive(builder, field, obj);
                     case "string" -> appendStringEnum(builder, field, obj);
                 }
             } else if (simpleName.equals("Long")) {
@@ -53,8 +66,7 @@ public class SerializerImpl implements Serializer {
                 .append(field.getName())
                 .append("\"")
                 .append(":")
-                .append(field.get(obj))
-                .append("");
+                .append(field.get(obj));
     }
 
     private void appendLocalDate(StringBuilder builder, Field field, Object obj) throws IllegalAccessException {
@@ -102,11 +114,14 @@ public class SerializerImpl implements Serializer {
                 .append(field.getName())
                 .append("\"")
                 .append(":");
-        if (field.getType().getName().equals("long")) {
+        String name = field.getType().getName();
+        if (name.equals("long")) {
             builder.append(field.getLong(obj));
 
-        } else {
+        } else if (name.equals("int")){
             builder.append(field.getInt(obj));
+        } else {
+            builder.append(field.getBoolean(obj));
         }
     }
 }
